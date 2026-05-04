@@ -124,19 +124,26 @@ while ($row = mysqli_fetch_assoc($res_emp)) {
 function estado_dia($id_v, $fecha, $asig, $venc) {
     if (isset($venc[$id_v])) {
         foreach ($venc[$id_v] as $fv) {
-            if ($fv == $fecha) return ['clase'=>'cell-vencimiento','texto'=>'VENC. TARJETA'];
+            if ($fv == $fecha) return ['clase'=>'cell-vencimiento','html'=>'VENC. TARJETA'];
         }
     }
     if (isset($asig[$id_v])) {
         foreach ($asig[$id_v] as $a) {
             if ($fecha >= $a['fi'] && $fecha <= $a['ff']) {
-                if ($a['mant']) return ['clase'=>'cell-mantenimiento','texto'=>'MANTENIMIENTO'];
-                $t = !empty($a['conductor']) ? $a['conductor'] : 'ASIGNADO';
-                return ['clase'=>'cell-ocupado','texto'=>$t];
+                if ($a['mant']) return ['clase'=>'cell-mantenimiento','html'=>'MANTENIMIENTO'];
+                $num = !empty($a['num_evento']) ? htmlspecialchars($a['num_evento']) : 'N/D';
+                $fi = date('d-M-Y', strtotime($a['fi']));
+                $ff = date('d-M-Y', strtotime($a['ff']));
+                $cond = !empty($a['conductor']) ? htmlspecialchars($a['conductor']) : 'ASIGNADO';
+                $html = "<strong>No. EVENTO:</strong> {$num}<br>"
+                      . "<strong>ENTREGA:</strong> {$fi}<br>"
+                      . "<strong>DEVOLUCIÓN:</strong> {$ff}<br>"
+                      . "<strong>MANEJA:</strong> {$cond}";
+                return ['clase'=>'cell-ocupado','html'=>$html];
             }
         }
     }
-    return ['clase'=>'cell-vacio','texto'=>''];
+    return ['clase'=>'cell-vacio','html'=>''];
 }
 
 // ── Navegación meses ──
@@ -252,11 +259,6 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
       <th class="col-check"></th>
       <th>No.</th>
       <th>NOMBRE DEL VEHÍCULO</th>
-      <th>EMPRESA</th>
-      <th>No. EVENTO</th>
-      <th>FECHA DE ENTREGA</th>
-      <th>FECHA DE DEVOLUCIÓN</th>
-      <th>NOMBRE DEL QUE MANEJA EL VEHÍCULO</th>
       <?php for($d=1;$d<=$dias_en_mes;$d++):
           $fs = sprintf('%04d-%02d-%02d',$anio_sel,$mes_sel,$d);
           $dw = date('w',strtotime($fs));
@@ -270,11 +272,6 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
       <td style="background:#e2f2f2"></td>
       <td style="background:#e2f2f2"><input type="text" class="form-control form-control-sm" id="filtro_no" placeholder="#"></td>
       <td style="background:#e2f2f2"><input type="text" class="form-control form-control-sm" id="filtro_nombre" placeholder="Buscar vehículo..."></td>
-      <td style="background:#e2f2f2"><input type="text" class="form-control form-control-sm" id="filtro_empresa_col" placeholder="Empresa"></td>
-      <td style="background:#e2f2f2"><input type="text" class="form-control form-control-sm" id="filtro_evento" placeholder="No. Evento..."></td>
-      <td style="background:#e2f2f2"></td>
-      <td style="background:#e2f2f2"></td>
-      <td style="background:#e2f2f2"><input type="text" class="form-control form-control-sm" id="filtro_quien" placeholder="Nombre..."></td>
       <?php for($d=1;$d<=$dias_en_mes;$d++): ?><td style="background:#e2f2f2"></td><?php endfor; ?>
     </tr>
   </thead>
@@ -283,30 +280,16 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
 $cnt = 0;
 foreach($vehiculos_filtrados as $id_v => $v):
     $cnt++;
-    $emp = isset($vehiculos_con_empresa[$id_v]) ? $vehiculos_con_empresa[$id_v] : '';
-    $fe=''; $fd=''; $cond=''; $num_ev='';
-    if(isset($asignaciones[$id_v])){
-        $p = $asignaciones[$id_v][0];
-        $fe = date('d-M-Y', strtotime($p['fi']));
-        $fd = date('d-M-Y', strtotime($p['ff']));
-        $cond = $p['conductor'];
-        $num_ev = $p['num_evento'];
-    }
 ?>
     <tr>
       <td class="col-check"><input type="checkbox" class="form-check-input"></td>
       <td class="col-no"><?php echo $cnt; ?></td>
       <td class="col-nombre"><?php echo htmlspecialchars($v['SUBMARCAV']); ?></td>
-      <td class="col-empresa"><?php echo htmlspecialchars($emp); ?></td>
-      <td class="col-evento"><?php echo htmlspecialchars($num_ev); ?></td>
-      <td class="col-fecha"><?php echo $fe; ?></td>
-      <td class="col-fecha"><?php echo $fd; ?></td>
-      <td class="col-quien"><?php echo htmlspecialchars($cond); ?></td>
       <?php for($d=1;$d<=$dias_en_mes;$d++):
           $fdia = sprintf('%04d-%02d-%02d',$anio_sel,$mes_sel,$d);
           $est = estado_dia($id_v, $fdia, $asignaciones, $vencimientos);
       ?>
-      <td class="<?php echo $est['clase']; ?> dia-col" title="<?php echo htmlspecialchars($est['texto']); ?>"><?php echo htmlspecialchars($est['texto']); ?></td>
+      <td class="<?php echo $est['clase']; ?> dia-col"><?php echo $est['html']; ?></td>
       <?php endfor; ?>
     </tr>
 <?php endforeach; ?>
@@ -317,8 +300,8 @@ foreach($vehiculos_filtrados as $id_v => $v):
 <div class="hint-text">Mostrando 1 al <?php echo $total_registros; ?> de <?php echo $total_registros; ?> registros</div>
 
 <script>
-['filtro_nombre','filtro_empresa_col','filtro_quien','filtro_evento'].forEach(function(id){
-    var colClass = id==='filtro_nombre'?'.col-nombre': id==='filtro_empresa_col'?'.col-empresa': id==='filtro_evento'?'.col-evento':'.col-quien';
+['filtro_nombre'].forEach(function(id){
+    var colClass = '.col-nombre';
     document.getElementById(id).addEventListener('input', function(){
         var f = this.value.toUpperCase();
         document.querySelectorAll('#tablaVehiculos tbody tr').forEach(function(fila){
