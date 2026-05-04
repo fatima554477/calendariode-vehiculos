@@ -23,6 +23,10 @@ $meses_abrev = [
     1=>'ene',2=>'feb',3=>'mar',4=>'abr',5=>'may',6=>'jun',
     7=>'jul',8=>'ago',9=>'sep',10=>'oct',11=>'nov',12=>'dic'
 ];
+$dias_semana_nombres = [
+    0=>'DOMINGO',1=>'LUNES',2=>'MARTES',3=>'MIÉRCOLES',4=>'JUEVES',5=>'VIERNES',6=>'SÁBADO'
+];
+
 
 $mes_sel  = isset($_GET['mes'])  ? intval($_GET['mes'])  : intval(date('n'));
 $anio_sel = isset($_GET['anio']) ? intval($_GET['anio']) : intval(date('Y'));
@@ -303,7 +307,7 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
           $esFin = ($dw==0||$dw==6);
           $bg = $esFin ? 'background:#e2e3e5' : 'background:#c9e8e8';
       ?>
-      <th class="dia-header <?php echo $esFin?'th-fs':''; ?>" style="<?php echo $bg; ?>"><?php echo sprintf('%02d',$d).'-'.$meses_abrev[$mes_sel]; ?></th>
+      <th class="dia-header <?php echo $esFin?'th-fs':''; ?>" style="<?php echo $bg; ?>" title="<?php echo $dias_semana_nombres[$dw]; ?>"><?php echo sprintf('%02d',$d).'-'.$meses_abrev[$mes_sel].'<br><small>'.$dias_semana_nombres[$dw].'</small>'; ?></th>
       <?php endfor; ?>
     </tr>
     <tr>
