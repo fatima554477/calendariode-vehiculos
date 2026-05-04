@@ -146,6 +146,14 @@ function estado_dia($id_v, $fecha, $asig, $venc) {
     return ['clase'=>'cell-vacio','html'=>''];
 }
 
+function obtener_asignacion_activa($id_v, $fecha, $asig) {
+    if (!isset($asig[$id_v])) return null;
+    foreach ($asig[$id_v] as $a) {
+        if ($fecha >= $a['fi'] && $fecha <= $a['ff']) return $a;
+    }
+    return null;
+}
+
 // ── Navegación meses ──
 $ma = $mes_sel-1; $aa = $anio_sel; if($ma<1){$ma=12;$aa--;}
 $ms = $mes_sel+1; $as = $anio_sel; if($ms>12){$ms=1;$as++;}
@@ -285,12 +293,59 @@ foreach($vehiculos_filtrados as $id_v => $v):
       <td class="col-check"><input type="checkbox" class="form-check-input"></td>
       <td class="col-no"><?php echo $cnt; ?></td>
       <td class="col-nombre"><?php echo htmlspecialchars($v['SUBMARCAV']); ?></td>
-      <?php for($d=1;$d<=$dias_en_mes;$d++):
+    <?php
+      $d = 1;
+      while($d <= $dias_en_mes):
           $fdia = sprintf('%04d-%02d-%02d',$anio_sel,$mes_sel,$d);
+
+          // Vencimiento sigue siendo por día puntual
+          if (isset($vencimientos[$id_v]) && in_array($fdia, $vencimientos[$id_v])) {
+              $est = estado_dia($id_v, $fdia, $asignaciones, $vencimientos);
+      ?>
+      <td class="<?php echo $est['clase']; ?> dia-col"><?php echo $est['html']; ?></td>
+      <?php
+              $d++;
+              continue;
+          }
+
+          $asig_activa = obtener_asignacion_activa($id_v, $fdia, $asignaciones);
+          if ($asig_activa) {
+              $inicio_visible = max($asig_activa['fi'], $fecha_inicio_mes);
+              $fin_visible = min($asig_activa['ff'], $fecha_fin_mes);
+              $dia_inicio = intval(date('j', strtotime($inicio_visible)));
+              $dia_fin = intval(date('j', strtotime($fin_visible)));
+
+              if ($d == $dia_inicio) {
+                  $span = max(1, $dia_fin - $dia_inicio + 1);
+                  if ($asig_activa['mant']) {
+                      $html_span = 'MANTENIMIENTO';
+                      $clase_span = 'cell-mantenimiento';
+                  } else {
+                      $num = !empty($asig_activa['num_evento']) ? htmlspecialchars($asig_activa['num_evento']) : 'N/D';
+                      $fi = date('d-M-Y', strtotime($asig_activa['fi']));
+                      $ff = date('d-M-Y', strtotime($asig_activa['ff']));
+                      $cond = !empty($asig_activa['conductor']) ? htmlspecialchars($asig_activa['conductor']) : 'ASIGNADO';
+                      $html_span = "<strong>No. EVENTO:</strong> {$num}<br>"
+                                . "<strong>ENTREGA:</strong> {$fi}<br>"
+                                . "<strong>DEVOLUCIÓN:</strong> {$ff}<br>"
+                                . "<strong>MANEJA:</strong> {$cond}";
+                      $clase_span = 'cell-ocupado';
+                  }
+      ?>
+      <td colspan="<?php echo $span; ?>" class="<?php echo $clase_span; ?> dia-col"><?php echo $html_span; ?></td>
+      <?php
+                  $d += $span;
+                  continue;
+              }
+          }
+
           $est = estado_dia($id_v, $fdia, $asignaciones, $vencimientos);
       ?>
       <td class="<?php echo $est['clase']; ?> dia-col"><?php echo $est['html']; ?></td>
-      <?php endfor; ?>
+      <?php
+          $d++;
+      endwhile;
+      ?>
     </tr>
 <?php endforeach; ?>
   </tbody>
