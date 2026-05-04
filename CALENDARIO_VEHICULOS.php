@@ -160,10 +160,12 @@ function color_evento($asignacion) {
         ['bg'=>'#e2e6ff','fg'=>'#1f2a7a']
     ];
 
-    $num_evento = isset($asignacion['num_evento']) ? $asignacion['num_evento'] : '';
+   $num_evento = isset($asignacion['num_evento']) ? $asignacion['num_evento'] : '';
     $evento = isset($asignacion['evento']) ? $asignacion['evento'] : '';
     $empresa = isset($asignacion['empresa']) ? $asignacion['empresa'] : '';
-    $key = trim($num_evento.'|'.$evento.'|'.$empresa);
+    $fi = isset($asignacion['fi']) ? $asignacion['fi'] : '';
+    $ff = isset($asignacion['ff']) ? $asignacion['ff'] : '';
+    $key = trim($num_evento.'|'.$evento.'|'.$empresa.'|'.$fi.'|'.$ff);
     if ($key === '||') {
         $conductor = isset($asignacion['conductor']) ? $asignacion['conductor'] : '';
         $solicitante = isset($asignacion['solicitante']) ? $asignacion['solicitante'] : '';
@@ -278,11 +280,11 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
 <!-- LEYENDA -->
 <div class="leyenda">
   <strong>LEYENDA:</strong>
-  <div class="leyenda-item"><div class="leyenda-color" style="background:#d4edda"></div> DISPONIBLE</div>
+  <div class="leyenda-item"><div class="leyenda-color" ></div> DISPONIBLE</div>
   <div class="leyenda-item"><div class="leyenda-color" style="background:linear-gradient(135deg,#d6e9ff,#ffe0cc,#e4f7d2)"></div> ASIGNADO (COLOR POR EVENTO)</div>
-  <div class="leyenda-item"><div class="leyenda-color" style="background:#fff3cd"></div> MANTENIMIENTO</div>
-  <div class="leyenda-item"><div class="leyenda-color" style="background:#f8d7da"></div> VENCIMIENTO / ALERTA</div>
-  <div class="leyenda-item"><div class="leyenda-color" style="background:#e2e3e5"></div> FINES DE SEMANA</div>
+  <div class="leyenda-item"><div class="leyenda-color" ></div> MANTENIMIENTO</div>
+  <div class="leyenda-item"><div class="leyenda-color" ></div> VENCIMIENTO / ALERTA</div>
+
 </div>
 
 <div class="hint-text"><?php echo $total_registros; ?> vehículos registrados</div>
