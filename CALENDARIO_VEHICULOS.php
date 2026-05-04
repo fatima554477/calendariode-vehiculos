@@ -124,13 +124,13 @@ while ($row = mysqli_fetch_assoc($res_emp)) {
 function estado_dia($id_v, $fecha, $asig, $venc) {
     if (isset($venc[$id_v])) {
         foreach ($venc[$id_v] as $fv) {
-            if ($fv == $fecha) return ['clase'=>'cell-vencimiento','html'=>'VENC. TARJETA'];
+            if ($fv == $fecha) return ['clase'=>'cell-vencimiento','html'=>'VENC. TARJETA','style'=>''];
         }
     }
     if (isset($asig[$id_v])) {
         foreach ($asig[$id_v] as $a) {
             if ($fecha >= $a['fi'] && $fecha <= $a['ff']) {
-                if ($a['mant']) return ['clase'=>'cell-mantenimiento','html'=>'MANTENIMIENTO'];
+                if ($a['mant']) return ['clase'=>'cell-mantenimiento','html'=>'MANTENIMIENTO','style'=>''];
                 $num = !empty($a['num_evento']) ? htmlspecialchars($a['num_evento']) : 'N/D';
                 $fi = date('d-M-Y', strtotime($a['fi']));
                 $ff = date('d-M-Y', strtotime($a['ff']));
@@ -139,11 +139,39 @@ function estado_dia($id_v, $fecha, $asig, $venc) {
                       . "<strong>ENTREGA:</strong> {$fi}<br>"
                       . "<strong>DEVOLUCIÓN:</strong> {$ff}<br>"
                       . "<strong>MANEJA:</strong> {$cond}";
-                return ['clase'=>'cell-ocupado','html'=>$html];
+                $color = color_evento($a);
+                return ['clase'=>'cell-ocupado','html'=>$html,'style'=>"background:{$color['bg']};color:{$color['fg']}"];
             }
         }
     }
-    return ['clase'=>'cell-vacio','html'=>''];
+    return ['clase'=>'cell-vacio','html'=>'','style'=>''];
+}
+
+
+function color_evento($asignacion) {
+    $palette = [
+        ['bg'=>'#d6e9ff','fg'=>'#003b73'],
+        ['bg'=>'#ffe0cc','fg'=>'#7a2e00'],
+        ['bg'=>'#e4f7d2','fg'=>'#2f5d00'],
+        ['bg'=>'#f3ddff','fg'=>'#5c0080'],
+        ['bg'=>'#ffd9ec','fg'=>'#7b003d'],
+        ['bg'=>'#d8f7f5','fg'=>'#005f5b'],
+        ['bg'=>'#fff4cc','fg'=>'#6b5600'],
+        ['bg'=>'#e2e6ff','fg'=>'#1f2a7a']
+    ];
+
+    $num_evento = isset($asignacion['num_evento']) ? $asignacion['num_evento'] : '';
+    $evento = isset($asignacion['evento']) ? $asignacion['evento'] : '';
+    $empresa = isset($asignacion['empresa']) ? $asignacion['empresa'] : '';
+    $key = trim($num_evento.'|'.$evento.'|'.$empresa);
+    if ($key === '||') {
+        $conductor = isset($asignacion['conductor']) ? $asignacion['conductor'] : '';
+        $solicitante = isset($asignacion['solicitante']) ? $asignacion['solicitante'] : '';
+        $key = trim($conductor.'|'.$solicitante);
+    }
+
+    $hash = abs(crc32($key));
+    return $palette[$hash % count($palette)];
 }
 
 function obtener_asignacion_activa($id_v, $fecha, $asig) {
@@ -177,7 +205,7 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
   .table tbody tr:hover{filter:brightness(.95)}
   .cell-disponible{background:#d4edda;color:#155724;font-weight:600}
   .cell-mantenimiento{background:#fff3cd;color:#856404;font-weight:600}
-  .cell-ocupado{background:#cce5ff;color:#004085}
+  .cell-ocupado{font-weight:600}
   .cell-vencimiento{background:#f8d7da;color:#721c24;font-weight:600}
   .cell-vacio{background:#fff}
   .leyenda{display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}
@@ -251,7 +279,7 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
 <div class="leyenda">
   <strong>LEYENDA:</strong>
   <div class="leyenda-item"><div class="leyenda-color" style="background:#d4edda"></div> DISPONIBLE</div>
-  <div class="leyenda-item"><div class="leyenda-color" style="background:#cce5ff"></div> ASIGNADO</div>
+  <div class="leyenda-item"><div class="leyenda-color" style="background:linear-gradient(135deg,#d6e9ff,#ffe0cc,#e4f7d2)"></div> ASIGNADO (COLOR POR EVENTO)</div>
   <div class="leyenda-item"><div class="leyenda-color" style="background:#fff3cd"></div> MANTENIMIENTO</div>
   <div class="leyenda-item"><div class="leyenda-color" style="background:#f8d7da"></div> VENCIMIENTO / ALERTA</div>
   <div class="leyenda-item"><div class="leyenda-color" style="background:#e2e3e5"></div> FINES DE SEMANA</div>
@@ -302,7 +330,7 @@ foreach($vehiculos_filtrados as $id_v => $v):
           if (isset($vencimientos[$id_v]) && in_array($fdia, $vencimientos[$id_v])) {
               $est = estado_dia($id_v, $fdia, $asignaciones, $vencimientos);
       ?>
-      <td class="<?php echo $est['clase']; ?> dia-col"><?php echo $est['html']; ?></td>
+      <td class="<?php echo $est['clase']; ?> dia-col" style="<?php echo isset($est['style']) ? $est['style'] : ''; ?>"><?php echo $est['html']; ?></td>
       <?php
               $d++;
               continue;
@@ -320,6 +348,7 @@ foreach($vehiculos_filtrados as $id_v => $v):
                   if ($asig_activa['mant']) {
                       $html_span = 'MANTENIMIENTO';
                       $clase_span = 'cell-mantenimiento';
+                      $style_span = ''; 
                   } else {
                       $num = !empty($asig_activa['num_evento']) ? htmlspecialchars($asig_activa['num_evento']) : 'N/D';
                       $fi = date('d-M-Y', strtotime($asig_activa['fi']));
@@ -330,9 +359,11 @@ foreach($vehiculos_filtrados as $id_v => $v):
                                 . "<strong>DEVOLUCIÓN:</strong> {$ff}<br>"
                                 . "<strong>MANEJA:</strong> {$cond}";
                       $clase_span = 'cell-ocupado';
+                      $color = color_evento($asig_activa);
+                      $style_span = "background:{$color['bg']};color:{$color['fg']}";
                   }
       ?>
-      <td colspan="<?php echo $span; ?>" class="<?php echo $clase_span; ?> dia-col"><?php echo $html_span; ?></td>
+      <td colspan="<?php echo $span; ?>" class="<?php echo $clase_span; ?> dia-col" style="<?php echo isset($style_span) ? $style_span : ''; ?>"><?php echo $html_span; ?></td>
       <?php
                   $d += $span;
                   continue;
@@ -341,7 +372,7 @@ foreach($vehiculos_filtrados as $id_v => $v):
 
           $est = estado_dia($id_v, $fdia, $asignaciones, $vencimientos);
       ?>
-      <td class="<?php echo $est['clase']; ?> dia-col"><?php echo $est['html']; ?></td>
+      <td class="<?php echo $est['clase']; ?> dia-col" style="<?php echo isset($est['style']) ? $est['style'] : ''; ?>"><?php echo $est['html']; ?></td>
       <?php
           $d++;
       endwhile;
