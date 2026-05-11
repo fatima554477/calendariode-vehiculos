@@ -37,11 +37,24 @@ $fecha_inicio_mes = sprintf('%04d-%02d-01', $anio_sel, $mes_sel);
 $fecha_fin_mes    = sprintf('%04d-%02d-%02d', $anio_sel, $mes_sel, $dias_en_mes);
 
 // ══════════ 1. VEHÍCULOS ══════════
-$sql_vehiculos = "SELECT id, SUBMARCAV, COLORV, PLACASV, PROPIETARIOV FROM 09vehiculos ORDER BY id ASC";
-$res_vehiculos = mysqli_query($conn, $sql_vehiculos);
+$vehiculos_permitidos = [];
+if($conexion->variablespermisos('','vervehiculo','ver')=='si'){
+    $queryper = $conexion->lista_plantillaventavehi_todos();
+}else{
+    $queryper = $conexion->lista_plantillaventavehi();
+}
+while ($row_permiso = mysqli_fetch_assoc($queryper)) {
+    $vehiculos_permitidos[] = intval($row_permiso['id']);
+}
+
 $vehiculos = [];
-while ($row = mysqli_fetch_assoc($res_vehiculos)) {
-    $vehiculos[$row['id']] = $row;
+if (!empty($vehiculos_permitidos)) {
+    $ids_vehiculos = implode(',', $vehiculos_permitidos);
+    $sql_vehiculos = "SELECT id, SUBMARCAV, COLORV, PLACASV, PROPIETARIOV FROM 09vehiculos WHERE id IN (".$ids_vehiculos.") ORDER BY id ASC";
+    $res_vehiculos = mysqli_query($conn, $sql_vehiculos);
+    while ($row = mysqli_fetch_assoc($res_vehiculos)) {
+        $vehiculos[$row['id']] = $row;
+    }
 }
 
 // ══════════ 2. ASIGNACIONES DEL MES ══════════
