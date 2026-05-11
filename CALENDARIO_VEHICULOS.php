@@ -152,10 +152,9 @@ function estado_dia($id_v, $fecha, $asig, $venc) {
                 $fi = date('d-M-Y', strtotime($a['fi']));
                 $ff = date('d-M-Y', strtotime($a['ff']));
                 $cond = !empty($a['conductor']) ? htmlspecialchars($a['conductor']) : 'ASIGNADO';
-                $html = "<strong>No. EVENTO:</strong> {$num}<br>"
-                      . "<strong>ENTREGA:</strong> {$fi}<br>"
-                      . "<strong>DEVOLUCIÓN:</strong> {$ff}<br>"
-                      . "<strong>MANEJA:</strong> {$cond}";
+                $html = "<strong></strong> {$num}<br>"
+                      
+                      . "<strong></strong> {$cond}";
                 $color = color_evento($a);
                 return ['clase'=>'cell-ocupado','html'=>$html,'style'=>"background:{$color['bg']};color:{$color['fg']}"];
             }
@@ -373,10 +372,9 @@ foreach($vehiculos_filtrados as $id_v => $v):
                       $fi = date('d-M-Y', strtotime($asig_activa['fi']));
                       $ff = date('d-M-Y', strtotime($asig_activa['ff']));
                       $cond = !empty($asig_activa['conductor']) ? htmlspecialchars($asig_activa['conductor']) : 'ASIGNADO';
-                      $html_span = "<strong>No. EVENTO:</strong> {$num}<br>"
-                                . "<strong>ENTREGA:</strong> {$fi}<br>"
-                                . "<strong>DEVOLUCIÓN:</strong> {$ff}<br>"
-                                . "<strong>MANEJA:</strong> {$cond}";
+                      $html_span = "<strong></strong> {$num}<br>"
+                               
+                                . "<strong></strong> {$cond}";
                       $clase_span = 'cell-ocupado';
                       $color = color_evento($asig_activa);
                       $style_span = "background:{$color['bg']};color:{$color['fg']}";
