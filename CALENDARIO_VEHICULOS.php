@@ -50,7 +50,8 @@ while ($row_permiso = mysqli_fetch_assoc($queryper)) {
 $vehiculos = [];
 if (!empty($vehiculos_permitidos)) {
     $ids_vehiculos = implode(',', $vehiculos_permitidos);
-    $sql_vehiculos = "SELECT id, SUBMARCAV, COLORV, PLACASV, PROPIETARIOV FROM 09vehiculos WHERE id IN (".$ids_vehiculos.") ORDER BY id ASC";
+    // DESPUÉS ✅
+$sql_vehiculos = "SELECT id, MARCAV, SUBMARCAV, COLORV, PLACASV, PROPIETARIOV FROM 09vehiculos WHERE id IN (".$ids_vehiculos.") ORDER BY id ASC";
     $res_vehiculos = mysqli_query($conn, $sql_vehiculos);
     while ($row = mysqli_fetch_assoc($res_vehiculos)) {
         $vehiculos[$row['id']] = $row;
@@ -147,11 +148,10 @@ function estado_dia($id_v, $fecha, $asig, $venc) {
     if (isset($asig[$id_v])) {
         foreach ($asig[$id_v] as $a) {
             if ($fecha >= $a['fi'] && $fecha <= $a['ff']) {
-    if ($a['mant']) return ['clase'=>'cell-mantenimiento','html'=>'MANTENIMIENTO','style'=>''];
+                if ($a['mant']) return ['clase'=>'cell-mantenimiento','html'=>'MANTENIMIENTO','style'=>''];
                 $num = !empty($a['num_evento']) ? htmlspecialchars($a['num_evento']) : 'N/D';
                 $cond = !empty($a['conductor']) ? htmlspecialchars(primeros_dos_nombres($a['conductor'])) : 'ASIGNADO';
                 $html = "<strong></strong> {$num}<br>"
-                      
                       . "<strong></strong> {$cond}";
                 $color = color_evento($a);
                 return ['clase'=>'cell-ocupado','html'=>$html,'style'=>"background:{$color['bg']};color:{$color['fg']}"];
@@ -169,7 +169,6 @@ function primeros_dos_nombres($nombre_completo) {
     return implode(' ', array_slice($partes, 0, 2));
 }
 
-
 function color_evento($asignacion) {
     $palette = [
         ['bg'=>'#d6e9ff','fg'=>'#003b73'],
@@ -181,8 +180,7 @@ function color_evento($asignacion) {
         ['bg'=>'#fff4cc','fg'=>'#6b5600'],
         ['bg'=>'#e2e6ff','fg'=>'#1f2a7a']
     ];
-
-   $num_evento = isset($asignacion['num_evento']) ? $asignacion['num_evento'] : '';
+    $num_evento = isset($asignacion['num_evento']) ? $asignacion['num_evento'] : '';
     $evento = isset($asignacion['evento']) ? $asignacion['evento'] : '';
     $empresa = isset($asignacion['empresa']) ? $asignacion['empresa'] : '';
     $fi = isset($asignacion['fi']) ? $asignacion['fi'] : '';
@@ -193,7 +191,6 @@ function color_evento($asignacion) {
         $solicitante = isset($asignacion['solicitante']) ? $asignacion['solicitante'] : '';
         $key = trim($conductor.'|'.$solicitante);
     }
-
     $hash = abs(crc32($key));
     return $palette[$hash % count($palette)];
 }
@@ -220,9 +217,93 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
   body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;font-size:14px;background:#f5f5f5}
-  thead tr:first-child th{position:sticky;top:0;background:#c9e8e8;z-index:10;font-size:13px;text-align:center;vertical-align:middle;padding:8px 6px;border:1px solid #a0c4c4}
-  thead tr:nth-child(2) td{position:sticky;top:42px;background:#e2f2f2;z-index:9;padding:5px;border:1px solid #c0d8d8}
+
+  /* ══════════ STICKY ENCABEZADOS (vertical) ══════════ */
+  thead tr:first-child th{
+    position:sticky;
+    top:0;
+    background:#c9e8e8;
+    z-index:10;
+    font-size:13px;
+    text-align:center;
+    vertical-align:middle;
+    padding:8px 6px;
+    border:1px solid #a0c4c4;
+  }
+  thead tr:nth-child(2) td{
+    position:sticky;
+    top:42px;
+    background:#e2f2f2;
+    z-index:9;
+    padding:5px;
+    border:1px solid #c0d8d8;
+  }
   thead tr:nth-child(2) td input{font-size:13px;padding:3px 6px;width:100%}
+
+  /* ══════════ STICKY COLUMNAS FIJAS (horizontal) ══════════ */
+  /* Anchos fijos de las 3 columnas izquierdas */
+  .col-sticky-0{
+    position:sticky;
+    left:0;
+    min-width:38px;
+    max-width:38px;
+    width:38px;
+    z-index:5;
+  }
+  .col-sticky-1{
+    position:sticky;
+    left:38px;
+    min-width:50px;
+    max-width:50px;
+    width:50px;
+    z-index:5;
+  }
+  .col-sticky-2{
+    position:sticky;
+    left:88px;
+    min-width:260px;
+    max-width:260px;
+    width:260px;
+    z-index:5;
+    box-shadow:3px 0 8px rgba(0,0,0,.15);
+  }
+
+  /* Encabezados: sticky vertical + horizontal combinados (z-index mayor) */
+  thead tr:first-child th.col-sticky-0,
+  thead tr:first-child th.col-sticky-1,
+  thead tr:first-child th.col-sticky-2{
+    z-index:20;
+    background:#c9e8e8;
+  }
+  thead tr:nth-child(2) td.col-sticky-0,
+  thead tr:nth-child(2) td.col-sticky-1,
+  thead tr:nth-child(2) td.col-sticky-2{
+    z-index:19;
+    background:#e2f2f2;
+  }
+
+  /* Celdas del body: heredar fondo de la fila para que no quede en blanco */
+  tbody tr td.col-sticky-0,
+  tbody tr td.col-sticky-1,
+  tbody tr td.col-sticky-2{
+    background:#fff;
+  }
+  tbody tr:nth-child(even) td.col-sticky-0,
+  tbody tr:nth-child(even) td.col-sticky-1,
+  tbody tr:nth-child(even) td.col-sticky-2{
+    background:#f2f2f2;
+  }
+  tbody tr:hover td.col-sticky-0,
+  tbody tr:hover td.col-sticky-1,
+  tbody tr:hover td.col-sticky-2{
+    background:#e8e8e8;
+  }
+.veh-marca  { font-size: 10px; font-weight: 500; color: #1a6e9f; letter-spacing: .5px; line-height: 1.3; }
+.veh-sub    { font-size: 12px; font-weight: 500; color: var(--color-text-primary); line-height: 1.3; }
+.veh-placas { font-size: 12px; font-weight: 500; color: #b04a00; background: #fff3e0;
+              border-radius: 3px; padding: 1px 5px; letter-spacing: .7px; display: inline-block; margin-top: 2px; }
+
+  /* ══════════ RESTO DE ESTILOS ══════════ */
   .table-scroll{max-height:650px;overflow-y:auto;overflow-x:auto;border:1px solid #ccc;background:#fff}
   .table{margin-bottom:0;font-size:14px}
   .table td,.table th{white-space:nowrap;vertical-align:middle;padding:7px 10px}
@@ -248,7 +329,7 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
   .dia-col{min-width:100px;max-width:150px;font-size:13px}
   .dia-header{font-size:12px}
   .col-no{min-width:45px;text-align:center}
-  .col-nombre{min-width:280px}
+  .col-nombre{min-width:260px}
   .col-empresa{min-width:70px;text-align:center}
   .col-evento{min-width:120px;text-align:center}
   .col-fecha{min-width:110px;text-align:center}
@@ -265,7 +346,7 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
 <div class="page-header">
   <div>
     <h1>CALENDARIO DE VEHÍCULOS</h1>
-    <div class="info">Tarjetas de circulación • Control de asignación de vehículos</div>
+    <div class="info"> Control de asignación de vehículos</div>
   </div>
   <div class="nav-m">
     <a href="?mes=<?php echo $ma; ?>&anio=<?php echo $aa.$pe; ?>">◀</a>
@@ -302,11 +383,10 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
 <!-- LEYENDA -->
 <div class="leyenda">
   <strong>LEYENDA:</strong>
-  <div class="leyenda-item"><div class="leyenda-color" ></div> DISPONIBLE</div>
+  <div class="leyenda-item"><div class="leyenda-color"></div> DISPONIBLE</div>
   <div class="leyenda-item"><div class="leyenda-color" style="background:linear-gradient(135deg,#d6e9ff,#ffe0cc,#e4f7d2)"></div> ASIGNADO (COLOR POR EVENTO)</div>
-  <div class="leyenda-item"><div class="leyenda-color" ></div> MANTENIMIENTO</div>
-  <div class="leyenda-item"><div class="leyenda-color" ></div> VENCIMIENTO / ALERTA</div>
-
+  <div class="leyenda-item"><div class="leyenda-color"></div> MANTENIMIENTO</div>
+  <div class="leyenda-item"><div class="leyenda-color"></div> VENCIMIENTO / ALERTA</div>
 </div>
 
 <div class="hint-text"><?php echo $total_registros; ?> vehículos registrados</div>
@@ -316,9 +396,11 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
 <table class="table table-striped table-bordered" id="tablaVehiculos">
   <thead>
     <tr>
-      <th class="col-check"></th>
-      <th>No.</th>
-      <th>NOMBRE DEL VEHÍCULO</th>
+      <!-- ░░ COLUMNAS FIJAS: sticky horizontal + sticky vertical ░░ -->
+      <th class="col-sticky-0"></th>
+      <th class="col-sticky-1">No.</th>
+      <th class="col-sticky-2">NOMBRE DEL VEHÍCULO</th>
+      <!-- ░░ COLUMNAS DE DÍAS: solo sticky vertical ░░ -->
       <?php for($d=1;$d<=$dias_en_mes;$d++):
           $fs = sprintf('%04d-%02d-%02d',$anio_sel,$mes_sel,$d);
           $dw = date('w',strtotime($fs));
@@ -329,10 +411,11 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
       <?php endfor; ?>
     </tr>
     <tr>
-      <td style="background:#e2f2f2"></td>
-      <td style="background:#e2f2f2"><input type="text" class="form-control form-control-sm" id="filtro_no" placeholder="#"></td>
-      <td style="background:#e2f2f2"><input type="text" class="form-control form-control-sm" id="filtro_nombre" placeholder="Buscar vehículo..."></td>
-      <?php for($d=1;$d<=$dias_en_mes;$d++): ?><td style="background:#e2f2f2"></td><?php endfor; ?>
+      <!-- ░░ FILA DE FILTROS: columnas fijas también sticky ░░ -->
+      <td class="col-sticky-0"></td>
+      <td class="col-sticky-1"><input type="text" class="form-control form-control-sm" id="filtro_no" placeholder="#"></td>
+      <td class="col-sticky-2"><input type="text" class="form-control form-control-sm" id="filtro_nombre" placeholder="Buscar vehículo..."></td>
+      <?php for($d=1;$d<=$dias_en_mes;$d++): ?><td></td><?php endfor; ?>
     </tr>
   </thead>
   <tbody>
@@ -342,22 +425,19 @@ foreach($vehiculos_filtrados as $id_v => $v):
     $cnt++;
 ?>
     <tr>
-      <td class="col-check"><input type="checkbox" class="form-check-input"></td>
-      <td class="col-no"><?php echo $cnt; ?></td>
-      <td class="col-nombre"><?php echo htmlspecialchars($v['SUBMARCAV']); ?></td>
-    <?php
-   $d = 1;
+      <!-- ░░ CELDAS FIJAS DEL BODY ░░ -->
+      <td class="col-check col-sticky-0"><input type="checkbox" class="form-check-input"></td>
+      <td class="col-no col-sticky-1"><?php echo $cnt; ?></td>
+<td class="col-nombre col-sticky-2">
+  <div class="veh-marca"><?php echo htmlspecialchars($v['MARCAV']); ?></div>
+  <div class="veh-sub"><?php echo htmlspecialchars($v['SUBMARCAV']); ?></div>
+  <div><span class="veh-placas"><?php echo htmlspecialchars($v['PLACASV']); ?></span></div>
+</td>
+      <!-- ░░ CELDAS DE DÍAS ░░ -->
+      <?php
+      $d = 1;
       while($d <= $dias_en_mes):
           $fdia = sprintf('%04d-%02d-%02d',$anio_sel,$mes_sel,$d);
-          $est = estado_dia($id_v, $fdia, $asignaciones, $vencimientos);
-      ?>
-      <td class="<?php echo $est['clase']; ?> dia-col" style="<?php echo isset($est['style']) ? $est['style'] : ''; ?>"><?php echo $est['html']; ?></td>
-      <?php
-                  $d += $span;
-                  continue;
-              }
-          }
-
           $est = estado_dia($id_v, $fdia, $asignaciones, $vencimientos);
       ?>
       <td class="<?php echo $est['clase']; ?> dia-col" style="<?php echo isset($est['style']) ? $est['style'] : ''; ?>"><?php echo $est['html']; ?></td>
@@ -375,11 +455,10 @@ foreach($vehiculos_filtrados as $id_v => $v):
 
 <script>
 ['filtro_nombre'].forEach(function(id){
-    var colClass = '.col-nombre';
     document.getElementById(id).addEventListener('input', function(){
         var f = this.value.toUpperCase();
         document.querySelectorAll('#tablaVehiculos tbody tr').forEach(function(fila){
-            var cel = fila.querySelector(colClass);
+            var cel = fila.querySelector('.col-nombre');
             if(cel) fila.style.display = cel.textContent.toUpperCase().indexOf(f)>-1?'':'none';
         });
     });
