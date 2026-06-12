@@ -1,5 +1,3 @@
-
-
 <div id="content">     
 			<hr/>
 		<strong>	  <p class="mb-0 text-uppercase" ><img src="includes/contraer31.png" id="mostrar34" style="cursor:pointer;"/>
@@ -43,7 +41,10 @@ $queryper = $conexion->lista_plantillaventavehi();
 
 
 
-$encabezado = '<select class="form-select mb-3" aria-label="Default select example" id="VEHICULOSEVE_VEHICULO" required="" name="VEHICULOSEVE_VEHICULO" onchange="OBTENER_VEHICULO()">
+$encabezado = '<select class="form-select mb-3" aria-label="Default select example" 
+    id="VEHICULOSEVE_VEHICULO" required="" name="VEHICULOSEVE_VEHICULO" 
+    onchange="OBTENER_VEHICULO()"
+    style="font-weight: 500; border: 2px solid #ced4da;">
 <option value="">SELECCIONA UNA OPCIÓN</option>';
 
 $fondos = array("fff0df","f4ffdf","dfffed","dffeff","dfe8ff","efdfff","ffdffd","efdfff","ffdfe9");
@@ -57,14 +58,56 @@ if($num==8){$num=0;}else{$num++;}
 $select='';
 if($VEHICULOSEVE_VEHICULO==$row1['SUBMARCAV']){$select = "selected";};
 
-$option20 .= '<option style="background: #'.$fondos[$num].'" '.$select.' value="'.$row1['id'].'">'.$row1['SUBMARCAV'].'</option>';
+$fechasOcupadasVehiculo = $altaeventos->fechas_ocupadas_vehiculo($row1['id']);
+
+$textoFechasOcupadas = '';
+
+if(count($fechasOcupadasVehiculo)>0){
+
+   $textoFechasOcupadas = ' - OCUPADO:   '.implode('    ·    ', $fechasOcupadasVehiculo);
+
+}
+
+$textoOpcionVehiculo = htmlspecialchars($row1['SUBMARCAV'].$textoFechasOcupadas, ENT_QUOTES, 'UTF-8');
+
+$textoDataFechas = htmlspecialchars(implode('||', $fechasOcupadasVehiculo), ENT_QUOTES, 'UTF-8');
+
+
+
+// Reemplázala por:
+$tieneOcupado = count($fechasOcupadasVehiculo) > 0;
+$estiloOpcion = $tieneOcupado 
+    ? 'background: #fde8e8; color: #8b0000; font-weight: bold;' 
+    : 'background: #'.$fondos[$num].'; color: #155724; font-weight: normal;';
+$prefijo = $tieneOcupado ? '🔴 ' : '🟢 ';
+
+$option20 .= '<option style="'.$estiloOpcion.'" '.$select.' value="'.$row1['id'].'" data-fechas-ocupadas="'.$textoDataFechas.'">'.$prefijo.$textoOpcionVehiculo.'</option>';
+
 }
 echo $encabezado.$option20.'</select>';		
 ?>
+
+
+<div id="fechas_ocupadas_vehiculo_select" style="display:block;margin-top:6px;line-height:2;"></div>
+
 </span>
 
  </td>                        
          </tr>
+		 <style>
+#VEHICULOSEVE_VEHICULO option[data-fechas-ocupadas=""] ,
+#VEHICULOSEVE_VEHICULO option:not([data-fechas-ocupadas]) {
+    background-color: #e8f5e9 !important;
+    color: #155724 !important;
+    font-weight: normal !important;
+}
+#VEHICULOSEVE_VEHICULO option[data-fechas-ocupadas]:not([data-fechas-ocupadas=""]) {
+    background-color: #fde8e8 !important;
+    color: #8b0000 !important;
+    font-weight: bold !important;
+    font-style: italic;
+}
+</style>
 
 		 
 		 
@@ -150,7 +193,7 @@ echo $encabezadoA.$option2.'</select>';
          <th scope="row"> <label for="validationCustom03" class="form-label">FECHA DE ENTREGA:<br><a style="color:red;font:7px">obligatorio</a></label></th>
 <td>
 
- <input type="date" class="form-control" id="tot" required=""   value="<?php echo $VEHICULOSEVE_ENTREGA; ?>"  name="VEHICULOSEVE_ENTREGA"  placeholder="">
+ <input type="date" class="form-control" id="VEHICULOSEVE_ENTREGA" required=""   value="<?php echo $VEHICULOSEVE_ENTREGA; ?>"  name="VEHICULOSEVE_ENTREGA"  placeholder="">
 
  </td> </tr> 
  
@@ -176,7 +219,7 @@ echo $encabezadoA.$option2.'</select>';
          <th scope="row"> <label for="validationCustom03" class="form-label">FECHA DE DEVOLUCIÓN:<br><a style="color:red;font:7px">obligatorio</a></label></th>
          <td>
 
- <input type="date" class="form-control" id="validationCustom03" required=""   value="<?php echo $VEHICULOSEVE_DEVOLU; ?>"  name="VEHICULOSEVE_DEVOLU"  placeholder="">
+ <input type="date" class="form-control" id="VEHICULOSEVE_DEVOLU" required=""   value="<?php echo $VEHICULOSEVE_DEVOLU; ?>"  name="VEHICULOSEVE_DEVOLU"  placeholder="">
 
  </td>
          </tr>
@@ -275,15 +318,20 @@ echo $encabezadoA.$option2.'</select>';
     <input type="hidden" value="HVEHICULOSEVE" name="HVEHICULOSEVE"/>     
  
         
+
+
  <td>
-           
-</td>
+ 		
+    <a href="CALENDARIO_VEHICULOS.php" target="_blank" 
+       class="btn btn-sm btn-outline-primary px-5" 
+       style="margin-left:700px;">
+       📅 CALENDARIO DE VEHÍCULOS
+    </a>
+
       
-
- <td>
            
 
- <button  style="float:right"  class="btn btn-sm btn-outline-success px-5"  type="button" id="GUARDAR_VEHICULOSEVE" name="GUARDAR_VEHICULOSEVE">GUARDAR</button> <div style="
+ <button  style="float:right"  class="btn btn-sm btn-outline-success px-5"  type="button" id="GUARDAR_VEHICULOSEVE" name="GUARDAR_VEHICULOSEVE">GUARDAR</button><br><small id="estado_disponibilidad_vehiculo" style="font-weight:bold;"></small> <div style="
 
     text-shadow: 1px 1px 1px #919191,
         1px 2px 1px #919191,
@@ -302,19 +350,32 @@ echo $encabezadoA.$option2.'</select>';
            
                    </table>
 
+
                   </form>
 				  
   
   
-			<form name="form_emai_vehiculos" id="form_emai_vehiculos">
-			<table>
-			<tr>
-			<?php if($conexion->variablespermisos('','VEHIEVE','email')=='si' and $var_bloquea_fecha=='no'){ ?>	
-			<td ><textarea  placeholder="ESCRIBE AQUÍ TUS CORREOS SEPARADOS POR PUNTO Y COMA EJEMPLO: NOMBRE@CORREO.ES;NOMBRE@CORREO.ES" style="width: 500px;" name="EMAIL_VEHICULOSEVE" id="EMAIL_VEHICULOSEVE" class="form-control" aria-label="With textarea"><?php echo $EMAIL_VEHICULOSEVE; ?></textarea>
-            <button class="btn btn-sm btn-outline-success px-5"  type="button" id="BUTTON_VEHICULOSEVE">ENVIAR POR EMAIL</button></td> <?php } ?>  
+<form name="form_emai_vehiculos" id="form_emai_vehiculos">
+<table>
+<tr>
+
+<!-- ✅ NUEVO BOTÓN CALENDARIO - va ANTES del botón de email -->
+
+<!-- FIN NUEVO BOTÓN -->
+
+<?php if($conexion->variablespermisos('','VEHIEVE','email')=='si' and $var_bloquea_fecha=='no'){ ?>	
+<td>
+    <textarea placeholder="ESCRIBE AQUÍ TUS CORREOS SEPARADOS POR PUNTO Y COMA EJEMPLO: NOMBRE@CORREO.ES;NOMBRE@CORREO.ES" 
+              style="width: 500px;" name="EMAIL_VEHICULOSEVE" id="EMAIL_VEHICULOSEVE" 
+              class="form-control" aria-label="With textarea"><?php echo $EMAIL_VEHICULOSEVE; ?></textarea>
+    <button class="btn btn-sm btn-outline-success px-5" type="button" id="BUTTON_VEHICULOSEVE">ENVIAR POR EMAIL</button>
+</td> 
+
+<?php } ?> 
+
+</tr>
 	
-			</tr>
-			</table>
+</table>
 
                         <?php
 $querycontras = $altaeventos->Listado_VEHICULOSEVE();
@@ -373,18 +434,30 @@ while($row = mysqli_fetch_array($querycontras))
 
 <td ><?php echo $row["nombreingresov"]; ?></td>
 <td ><?php echo $row["nombreocupov"]; ?></td>
-<td ><?php echo $row["VEHICULOSEVE_ENTREGA"]; ?></td>
+<td>
+    <?php 
+        echo date("d/m/Y", strtotime($row["VEHICULOSEVE_ENTREGA"])); 
+    ?>
+</td>
 <td ><?php echo $row["VEHICULOSEVE_LUGAR"]; ?></td>
 <td ><?php echo $row["VEHICULOSEVE_HORA"]; ?></td>
-<td ><?php echo $row["VEHICULOSEVE_DEVOLU"]; ?></td>
+<td>
+    <?php 
+        echo date("d/m/Y", strtotime($row["VEHICULOSEVE_DEVOLU"]));    
+    ?>
+</td>
 <td ><?php echo $row["VEHICULOSEVE_LUDEVO"]; ?></td>
 <td ><?php echo $row["VEHICULOSEVE_HORADEVO"]; ?></td>
-<td ><?php echo $row["VEHICULOSEVE_SOLICITUD"]; ?></td>
+<td>
+    <?php 
+        echo date("d/m/Y", strtotime($row["VEHICULOSEVE_SOLICITUD"])); 
+    ?>
+</td>
 <td ><?php echo $row["VEHICULOSEVE_DIAS"]; ?></td>
 <td ><?php echo number_format($row["VEHICULOSEVE_COSTO"],2,'.',','); ?></td>
 <td ><?php echo number_format($row["VEHICULOSEVE_SUB"],2,'.',','); ?></td>
 <td ><?php echo number_format($row["VEHICULOSEVE_IVA"],2,'.',','); ?></td>
-<td ><?php echo number_format($row["PRECIOPESOS_SOFTWARE"],2,'.',','); ?></td>
+<td ><?php echo number_format($row["PRECIOPESOS_SOFTWARE"],2,'.',','); ?></td>  
 <td ><?php echo $row["VEHICULOSEVE_OBSERVA"]; ?></td>
 <?php if($conexion->variablespermisos('','VEHIEVE','modificar')=='si' and $var_bloquea_fecha=='no'){ ?>
 <td><input type="button" name="view" value="MODIFICAR" id="<?php echo $row["id"]; ?>" class="btn btn-info btn-xs view_VEHICULOSEVE" /></td><?php } ?>
@@ -413,6 +486,118 @@ $GTOTAL += $row["PRECIOPESOS_SOFTWARE"];
 </div> 
 </div>
  
+<script>
+
+function validarDisponibilidadVehiculo(){
+    var vehiculo = $('#VEHICULOSEVE_VEHICULO').val();
+    var entrega = $('#VEHICULOSEVE_ENTREGA').val();
+    var devolu = $('#VEHICULOSEVE_DEVOLU').val();
+    var idActual = $('input[name="IpVEHICULOSEVE"]').val() || '';
+
+    if(vehiculo==='' || entrega==='' || devolu===''){
+        $('#estado_disponibilidad_vehiculo').html('');
+        $('#GUARDAR_VEHICULOSEVE').prop('disabled', false);
+        $('#VEHICULOSEVE_VEHICULO').css('border','');
+        return;
+    }
+
+    $.ajax({
+        url:'calendariodeeventos2/controladorAE.php',
+        method:'POST',
+        dataType:'json',
+        data:{
+            validar_disponibilidad_vehiculo:'validar_disponibilidad_vehiculo',
+            VEHICULOSEVE_VEHICULO:vehiculo,
+            VEHICULOSEVE_ENTREGA:entrega,
+            VEHICULOSEVE_DEVOLU:devolu,
+            IpVEHICULOSEVE:idActual
+        },
+        beforeSend:function(){
+            $('#estado_disponibilidad_vehiculo').css('color','#444').html('cargando');
+        },
+        success:function(resp){
+            if(resp && resp.ocupado){
+                $('#estado_disponibilidad_vehiculo').css('color','red').html('VEHÍCULO OCUPADO EN LAS FECHAS SELECCIONADAS');
+                $('#GUARDAR_VEHICULOSEVE').prop('disabled', true);
+                $('#VEHICULOSEVE_VEHICULO').css('border','2px solid red');
+            }else{
+                $('#estado_disponibilidad_vehiculo').css('color','green').html('VEHÍCULO DISPONIBLE');
+                $('#GUARDAR_VEHICULOSEVE').prop('disabled', false);
+                $('#VEHICULOSEVE_VEHICULO').css('border','2px solid #198754');
+            }
+        },
+        error:function(){
+            $('#estado_disponibilidad_vehiculo').css('color','red').html('NO SE PUDO VALIDAR DISPONIBILIDAD');
+            $('#GUARDAR_VEHICULOSEVE').prop('disabled', true);
+        }
+    });
+}
+
+
+function mostrarFechasOcupadasVehiculo(){
+
+    var fechasOcupadas = $('#VEHICULOSEVE_VEHICULO option:selected').data('fechas-ocupadas') || '';
+
+    if(fechasOcupadas !== ''){
+
+        $('#fechas_ocupadas_vehiculo_select').html('FECHAS OCUPADAS: ' + fechasOcupadas);
+
+    }else{
+
+        $('#fechas_ocupadas_vehiculo_select').html('');
+
+    }
+
+}
+
+$(document).on('change', '#VEHICULOSEVE_VEHICULO', function(){
+
+    mostrarFechasOcupadasVehiculo();
+
+});
+
+
+
+$(document).on('change', '#VEHICULOSEVE_VEHICULO, #VEHICULOSEVE_ENTREGA, #VEHICULOSEVE_DEVOLU', function(){
+    validarDisponibilidadVehiculo();
+});
+$(document).ready(function(){
+
+    mostrarFechasOcupadasVehiculo();
+
+});
+function actualizarFechasOcupadasSelect(){
+    $.ajax({
+        url: 'calendariodeeventos2/controladorAE.php',
+        method: 'POST',
+        dataType: 'json',
+        data: { obtener_fechas_todos_vehiculos: 'si' },
+        success: function(resp){
+            if(!resp){ return; }
+            $('#VEHICULOSEVE_VEHICULO option').each(function(){
+                var idVehiculo = $(this).val();
+                if(idVehiculo === ''){ return; }
+                var fechas = resp[idVehiculo] || [];
+                var textoDataFechas = fechas.join('||');
+                $(this).attr('data-fechas-ocupadas', textoDataFechas);
+                var tieneOcupado = fechas.length > 0;
+                if(tieneOcupado){
+                    $(this).css({'background':'#fde8e8','color':'#8b0000'});
+                    var textoActual = $(this).text().replace('🔴 ','').replace('🟢 ','').split(' - OCUPADO:')[0];
+                    $(this).text('🔴 ' + textoActual + ' - OCUPADO: ' + fechas.join(' · '));
+                }else{
+                    $(this).css({'background':'#e8f5e9','color':'#155724'});
+                    var textoActual = $(this).text().replace('🔴 ','').replace('🟢 ','').split(' - OCUPADO:')[0];
+                    $(this).text('🟢 ' + textoActual);
+                }
+            });
+            mostrarFechasOcupadasVehiculo();
+        }
+    });
+}
+
+</script>
+
  <?php 
 
 $_SESSION['VEHICULOSEVE_VEHICULO'] = '';
