@@ -129,6 +129,8 @@ if ($filtro_empresa != '') {
     if (!empty($temp)) $vehiculos_filtrados = $temp;
 }
 $total_registros = count($vehiculos_filtrados);
+$colores_vehiculos = colores_por_vehiculo($vehiculos_filtrados);
+
 
 // ══════════ 5. EMPRESAS PARA SELECT ══════════
 $sql_emp = "SELECT DISTINCT NCE_OBSERVACIONES FROM 03datosdelaempresa WHERE NCE_OBSERVACIONES IS NOT NULL AND NCE_OBSERVACIONES != '' ORDER BY NCE_OBSERVACIONES";
@@ -139,7 +141,8 @@ while ($row = mysqli_fetch_assoc($res_emp)) {
 }
 
 // ══════════ FUNCIÓN ESTADO DE CELDA ══════════
-function estado_dia($id_v, $fecha, $asig, $venc) {
+function estado_dia($id_v, $fecha, $asig, $venc, $colores_vehiculos) {
+
     if (isset($venc[$id_v])) {
         foreach ($venc[$id_v] as $fv) {
             if ($fv == $fecha) return ['clase'=>'cell-vencimiento','html'=>'VENC. TARJETA','style'=>''];
@@ -153,7 +156,8 @@ function estado_dia($id_v, $fecha, $asig, $venc) {
                 $cond = !empty($a['conductor']) ? htmlspecialchars(primeros_dos_nombres($a['conductor'])) : 'ASIGNADO';
                 $html = "<strong></strong> {$num}<br>"
                       . "<strong></strong> {$cond}";
-                $color = color_evento($a);
+                  $color = color_vehiculo($id_v, $colores_vehiculos);
+
                 return ['clase'=>'cell-ocupado','html'=>$html,'style'=>"background:{$color['bg']};color:{$color['fg']}"];
             }
         }
@@ -169,8 +173,10 @@ function primeros_dos_nombres($nombre_completo) {
     return implode(' ', array_slice($partes, 0, 2));
 }
 
-function color_evento($asignacion) {
-    $palette = [
+function paleta_colores_vehiculos() {
+
+    return [
+
         ['bg'=>'#d6e9ff','fg'=>'#003b73'],
         ['bg'=>'#ffe0cc','fg'=>'#7a2e00'],
         ['bg'=>'#e4f7d2','fg'=>'#2f5d00'],
@@ -178,21 +184,64 @@ function color_evento($asignacion) {
         ['bg'=>'#ffd9ec','fg'=>'#7b003d'],
         ['bg'=>'#d8f7f5','fg'=>'#005f5b'],
         ['bg'=>'#fff4cc','fg'=>'#6b5600'],
-        ['bg'=>'#e2e6ff','fg'=>'#1f2a7a']
+            ['bg'=>'#e2e6ff','fg'=>'#1f2a7a'],
+
+        ['bg'=>'#ffd6d6','fg'=>'#7a0000'],
+
+        ['bg'=>'#dfffe6','fg'=>'#006b1f'],
+
+        ['bg'=>'#f0e0c8','fg'=>'#5c3600'],
+
+        ['bg'=>'#d7ebff','fg'=>'#004a7c'],
+
+        ['bg'=>'#f7d7ff','fg'=>'#650078'],
+
+        ['bg'=>'#d6fff2','fg'=>'#00604b'],
+
+        ['bg'=>'#ffe6f0','fg'=>'#7b0030'],
+
+        ['bg'=>'#e8ffd1','fg'=>'#3c6600']
+
     ];
-    $num_evento = isset($asignacion['num_evento']) ? $asignacion['num_evento'] : '';
-    $evento = isset($asignacion['evento']) ? $asignacion['evento'] : '';
-    $empresa = isset($asignacion['empresa']) ? $asignacion['empresa'] : '';
-    $fi = isset($asignacion['fi']) ? $asignacion['fi'] : '';
-    $ff = isset($asignacion['ff']) ? $asignacion['ff'] : '';
-    $key = trim($num_evento.'|'.$evento.'|'.$empresa.'|'.$fi.'|'.$ff);
-    if ($key === '||') {
-        $conductor = isset($asignacion['conductor']) ? $asignacion['conductor'] : '';
-        $solicitante = isset($asignacion['solicitante']) ? $asignacion['solicitante'] : '';
-        $key = trim($conductor.'|'.$solicitante);
+
+   
+}
+
+
+
+function colores_por_vehiculo($vehiculos_filtrados) {
+
+    $palette = paleta_colores_vehiculos();
+
+    $colores = [];
+
+    $indice = 0;
+
+    foreach ($vehiculos_filtrados as $id_v => $vehiculo) {
+
+        $colores[$id_v] = $palette[$indice % count($palette)];
+
+        $indice++;
+
     }
-    $hash = abs(crc32($key));
-    return $palette[$hash % count($palette)];
+
+    return $colores;
+
+}
+
+
+
+function color_vehiculo($id_v, $colores_vehiculos) {
+
+    if (isset($colores_vehiculos[$id_v])) {
+
+        return $colores_vehiculos[$id_v];
+
+    }
+    $palette = paleta_colores_vehiculos();
+
+    return $palette[0];
+
 }
 
 function obtener_asignacion_activa($id_v, $fecha, $asig) {
@@ -384,7 +433,8 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
 <div class="leyenda">
   <strong>LEYENDA:</strong>
   <div class="leyenda-item"><div class="leyenda-color"></div> DISPONIBLE</div>
-  <div class="leyenda-item"><div class="leyenda-color" style="background:linear-gradient(135deg,#d6e9ff,#ffe0cc,#e4f7d2)"></div> ASIGNADO (COLOR POR EVENTO)</div>
+  <div class="leyenda-item"><div class="leyenda-color" style="background:linear-gradient(135deg,#d6e9ff,#ffe0cc,#e4f7d2)"></div> ASIGNADO (COLOR POR VEHÍCULO)</div>
+
   <div class="leyenda-item"><div class="leyenda-color"></div> MANTENIMIENTO</div>
   <div class="leyenda-item"><div class="leyenda-color"></div> VENCIMIENTO / ALERTA</div>
 </div>
@@ -438,7 +488,8 @@ foreach($vehiculos_filtrados as $id_v => $v):
       $d = 1;
       while($d <= $dias_en_mes):
           $fdia = sprintf('%04d-%02d-%02d',$anio_sel,$mes_sel,$d);
-          $est = estado_dia($id_v, $fdia, $asignaciones, $vencimientos);
+            $est = estado_dia($id_v, $fdia, $asignaciones, $vencimientos, $colores_vehiculos);
+
       ?>
       <td class="<?php echo $est['clase']; ?> dia-col" style="<?php echo isset($est['style']) ? $est['style'] : ''; ?>"><?php echo $est['html']; ?></td>
       <?php
