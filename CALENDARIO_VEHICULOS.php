@@ -310,9 +310,10 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
   .col-sticky-2{
     position:sticky;
     left:88px;
-    min-width:260px;
-    max-width:260px;
-    width:260px;
+     min-width:140px;
+    max-width:140px;
+    width:140px;
+
     z-index:5;
     box-shadow:3px 0 8px rgba(0,0,0,.15);
   }
@@ -348,7 +349,30 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
     background:#e8e8e8;
   }
 .veh-marca  { font-size: 10px; font-weight: 500; color: #1a6e9f; letter-spacing: .5px; line-height: 1.3; }
-.veh-sub    { font-size: 12px; font-weight: 500; color: var(--color-text-primary); line-height: 1.3; }
+.veh-sub    {
+
+    font-size: 12px;
+
+    font-weight: 500;
+
+    color: var(--color-text-primary);
+
+    line-height: 1.25;
+
+    white-space: normal;
+
+    overflow-wrap: anywhere;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+
+  }
+
 .veh-placas { font-size: 12px; font-weight: 500; color: #b04a00; background: #fff3e0;
               border-radius: 3px; padding: 1px 5px; letter-spacing: .7px; display: inline-block; margin-top: 2px; }
 
@@ -378,7 +402,7 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
   .dia-col{min-width:100px;max-width:150px;font-size:13px}
   .dia-header{font-size:12px}
   .col-no{min-width:45px;text-align:center}
-  .col-nombre{min-width:260px}
+    .col-nombre{min-width:140px;max-width:140px;white-space:normal}
   .col-empresa{min-width:70px;text-align:center}
   .col-evento{min-width:120px;text-align:center}
   .col-fecha{min-width:110px;text-align:center}
@@ -449,7 +473,7 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
       <!-- ░░ COLUMNAS FIJAS: sticky horizontal + sticky vertical ░░ -->
       <th class="col-sticky-0"></th>
       <th class="col-sticky-1">No.</th>
-      <th class="col-sticky-2">NOMBRE DEL VEHÍCULO</th>
+      <th class="col-sticky-2">NOMBRE DEL<br> VEHÍCULO</th>
       <!-- ░░ COLUMNAS DE DÍAS: solo sticky vertical ░░ -->
       <?php for($d=1;$d<=$dias_en_mes;$d++):
           $fs = sprintf('%04d-%02d-%02d',$anio_sel,$mes_sel,$d);
