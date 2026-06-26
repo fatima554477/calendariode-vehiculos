@@ -328,7 +328,8 @@ function exportar_calendario_excel($vehiculos_filtrados, $asignaciones, $vencimi
       echo '<table border="1" style="border-collapse:collapse;font-family:Arial, sans-serif;font-size:10pt;">';
 
 
-     echo '<tr><th colspan="'.(3 + $dias_en_mes).'" style="background:#2c3e50;color:#ffffff;font-size:14pt;font-weight:bold;text-align:center;">CALENDARIO DE VEH&Iacute;CULOS - '.$meses_nombres[$mes_sel].' '.$anio_sel.'</th></tr>';
+    echo '<tr><th colspan="'.(3 + $dias_en_mes).'" style="font-size:14pt;font-weight:bold;text-align:center;">CALENDARIO DE VEH&Iacute;CULOS - '.$meses_nombres[$mes_sel].' '.$anio_sel.'</th></tr>';
+
 
 
     echo '<tr>';
@@ -344,7 +345,8 @@ function exportar_calendario_excel($vehiculos_filtrados, $asignaciones, $vencimi
 
         $dw = date('w', strtotime($fecha));
 
-              $estilo_th = ($dw == 0 || $dw == 6) ? 'background:#e2e3e5;font-weight:bold;text-align:center;' : 'background:#c9e8e8;font-weight:bold;text-align:center;';
+               $estilo_th = 'font-weight:bold;text-align:center;';
+
 
 
 
