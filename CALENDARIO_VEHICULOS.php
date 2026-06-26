@@ -251,6 +251,105 @@ function obtener_asignacion_activa($id_v, $fecha, $asig) {
     }
     return null;
 }
+function texto_estado_excel($estado) {
+
+    $texto = trim(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $estado['html'])));
+
+    $texto = preg_replace('/\s+/', ' ', $texto);
+
+    return $texto;
+
+}
+
+
+
+function exportar_calendario_excel($vehiculos_filtrados, $asignaciones, $vencimientos, $colores_vehiculos, $dias_en_mes, $mes_sel, $anio_sel, $meses_nombres, $meses_abrev, $dias_semana_nombres) {
+
+    $nombre_archivo = 'calendario_vehiculos_'.$anio_sel.'_'.str_pad($mes_sel, 2, '0', STR_PAD_LEFT).'.xls';
+
+
+
+    header('Content-Type: application/vnd.ms-excel; charset=UTF-8');
+
+    header('Content-Disposition: attachment; filename="'.$nombre_archivo.'"');
+
+    header('Pragma: no-cache');
+
+    header('Expires: 0');
+
+
+
+    echo "\xEF\xBB\xBF";
+
+    echo '<table border="1">';
+
+    echo '<tr><th colspan="'.(3 + $dias_en_mes).'">CALENDARIO DE VEH&Iacute;CULOS - '.$meses_nombres[$mes_sel].' '.$anio_sel.'</th></tr>';
+
+    echo '<tr>';
+
+    echo '<th>No.</th><th>Veh&iacute;culo</th><th>Placas</th>';
+
+
+
+    for ($d = 1; $d <= $dias_en_mes; $d++) {
+
+        $fecha = sprintf('%04d-%02d-%02d', $anio_sel, $mes_sel, $d);
+
+        $dw = date('w', strtotime($fecha));
+
+        echo '<th>'.sprintf('%02d', $d).'-'.$meses_abrev[$mes_sel].' '.$dias_semana_nombres[$dw].'</th>';
+
+    }
+
+    echo '</tr>';
+
+
+
+    $cnt = 0;
+
+    foreach ($vehiculos_filtrados as $id_v => $v) {
+
+        $cnt++;
+
+        echo '<tr>';
+
+        echo '<td>'.$cnt.'</td>';
+
+        echo '<td>'.htmlspecialchars(trim($v['MARCAV'].' '.$v['SUBMARCAV']), ENT_QUOTES, 'UTF-8').'</td>';
+
+        echo '<td>'.htmlspecialchars($v['PLACASV'], ENT_QUOTES, 'UTF-8').'</td>';
+
+
+
+        for ($d = 1; $d <= $dias_en_mes; $d++) {
+
+            $fecha = sprintf('%04d-%02d-%02d', $anio_sel, $mes_sel, $d);
+
+            $estado = estado_dia($id_v, $fecha, $asignaciones, $vencimientos, $colores_vehiculos);
+
+            echo '<td>'.htmlspecialchars(texto_estado_excel($estado), ENT_QUOTES, 'UTF-8').'</td>';
+
+        }
+
+        echo '</tr>';
+
+    }
+
+
+
+    echo '</table>';
+
+    exit;
+
+}
+
+
+
+if (isset($_GET['exportar']) && $_GET['exportar'] === 'excel') {
+
+    exportar_calendario_excel($vehiculos_filtrados, $asignaciones, $vencimientos, $colores_vehiculos, $dias_en_mes, $mes_sel, $anio_sel, $meses_nombres, $meses_abrev, $dias_semana_nombres);
+
+}
 
 // ── Navegación meses ──
 $ma = $mes_sel-1; $aa = $anio_sel; if($ma<1){$ma=12;$aa--;}
@@ -426,7 +525,14 @@ $pe = $filtro_empresa!='' ? '&empresa='.$filtro_empresa : '';
     <span style="font-size:20px;font-weight:700"><?php echo $meses_nombres[$mes_sel].' '.$anio_sel; ?></span>
     <a href="?mes=<?php echo $ms; ?>&anio=<?php echo $as.$pe; ?>">▶</a>
   </div>
-  <div><button class="btn btn-sm btn-outline-light" style="font-size:14px" onclick="window.print()">🖨️ IMPRIMIR</button></div>
+ <div class="d-flex gap-2 flex-wrap justify-content-end">
+
+    <a class="btn btn-sm btn-success" style="font-size:14px" href="?mes=<?php echo $mes_sel; ?>&anio=<?php echo $anio_sel; ?><?php echo $pe; ?>&exportar=excel">📊 EXPORTAR A EXCEL</a>
+
+    <button class="btn btn-sm btn-outline-light" style="font-size:14px" onclick="window.print()">🖨️ IMPRIMIR</button>
+
+  </div>
+
 </div>
 
 <!-- CONTROLES -->
