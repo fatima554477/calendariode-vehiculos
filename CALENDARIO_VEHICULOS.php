@@ -106,15 +106,15 @@ while ($row = mysqli_fetch_assoc($res_asig)) {
 
 // ══════════ 3. VENCIMIENTOS TARJETA CIRCULACIÓN ══════════
 $sql_venc = "
-    SELECT idRelacion AS id_vehiculo, FECHA_VENCIMIENTOT
+    SELECT idRelacion AS id_vehiculo, DOCUMENTO_VENCIMIENTOT
     FROM 09fechavencimientotenencia 
-    WHERE FECHA_VENCIMIENTOT >= '".$fecha_inicio_mes."' 
-      AND FECHA_VENCIMIENTOT <= '".$fecha_fin_mes."'
+    WHERE DOCUMENTO_VENCIMIENTOT >= '".$fecha_inicio_mes."' 
+      AND DOCUMENTO_VENCIMIENTOT <= '".$fecha_fin_mes."'
 ";
 $res_venc = mysqli_query($conn, $sql_venc);
 $vencimientos = [];
 while ($row = mysqli_fetch_assoc($res_venc)) {
-    $vencimientos[$row['id_vehiculo']][] = $row['FECHA_VENCIMIENTOT'];
+    $vencimientos[$row['id_vehiculo']][] = $row['DOCUMENTO_VENCIMIENTOT'];
 }
 
 // ══════════ 4. FILTRAR VEHÍCULOS POR EMPRESA ══════════
@@ -255,12 +255,56 @@ function texto_estado_excel($estado) {
 
     $texto = trim(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $estado['html'])));
 
-    $texto = preg_replace('/\s+/', ' ', $texto);
+$texto = preg_replace('/[ \t]+/', ' ', $texto);
+
+
+
+    $texto = preg_replace('/\s*\n\s*/', "\n", $texto);
+
 
     return $texto;
 
 }
 
+function estilo_excel_estado($estado) {
+
+
+
+    $estilos_base = 'vertical-align:middle;text-align:center;white-space:normal;mso-data-placement:same-cell;';
+
+
+
+    if (!empty($estado['style'])) {
+
+        return $estilos_base.$estado['style'].';font-weight:bold;';
+
+    }
+
+
+
+    switch ($estado['clase']) {
+
+        case 'cell-mantenimiento':
+
+            return $estilos_base.'background:#fff3cd;color:#856404;font-weight:bold;';
+
+        case 'cell-vencimiento':
+
+            return $estilos_base.'background:#f8d7da;color:#721c24;font-weight:bold;';
+
+        case 'cell-vacio':
+
+            return $estilos_base.'background:#ffffff;color:#000000;';
+
+        default:
+
+            return $estilos_base;
+
+    }
+
+
+
+}
 
 
 function exportar_calendario_excel($vehiculos_filtrados, $asignaciones, $vencimientos, $colores_vehiculos, $dias_en_mes, $mes_sel, $anio_sel, $meses_nombres, $meses_abrev, $dias_semana_nombres) {
@@ -281,13 +325,16 @@ function exportar_calendario_excel($vehiculos_filtrados, $asignaciones, $vencimi
 
     echo "\xEF\xBB\xBF";
 
-    echo '<table border="1">';
+      echo '<table border="1" style="border-collapse:collapse;font-family:Arial, sans-serif;font-size:10pt;">';
 
-    echo '<tr><th colspan="'.(3 + $dias_en_mes).'">CALENDARIO DE VEH&Iacute;CULOS - '.$meses_nombres[$mes_sel].' '.$anio_sel.'</th></tr>';
+
+     echo '<tr><th colspan="'.(3 + $dias_en_mes).'" style="background:#2c3e50;color:#ffffff;font-size:14pt;font-weight:bold;text-align:center;">CALENDARIO DE VEH&Iacute;CULOS - '.$meses_nombres[$mes_sel].' '.$anio_sel.'</th></tr>';
+
 
     echo '<tr>';
 
-    echo '<th>No.</th><th>Veh&iacute;culo</th><th>Placas</th>';
+     echo '<th style="background:#c9e8e8;font-weight:bold;text-align:center;">No.</th><th style="background:#c9e8e8;font-weight:bold;text-align:center;">Veh&iacute;culo</th><th style="background:#c9e8e8;font-weight:bold;text-align:center;">Placas</th>';
+
 
 
 
@@ -297,7 +344,12 @@ function exportar_calendario_excel($vehiculos_filtrados, $asignaciones, $vencimi
 
         $dw = date('w', strtotime($fecha));
 
-        echo '<th>'.sprintf('%02d', $d).'-'.$meses_abrev[$mes_sel].' '.$dias_semana_nombres[$dw].'</th>';
+              $estilo_th = ($dw == 0 || $dw == 6) ? 'background:#e2e3e5;font-weight:bold;text-align:center;' : 'background:#c9e8e8;font-weight:bold;text-align:center;';
+
+
+
+        echo '<th style="'.$estilo_th.'">'.sprintf('%02d', $d).'-'.$meses_abrev[$mes_sel].' '.$dias_semana_nombres[$dw].'</th>';
+
 
     }
 
@@ -313,11 +365,14 @@ function exportar_calendario_excel($vehiculos_filtrados, $asignaciones, $vencimi
 
         echo '<tr>';
 
-        echo '<td>'.$cnt.'</td>';
+         echo '<td style="text-align:center;">'.$cnt.'</td>';
 
-        echo '<td>'.htmlspecialchars(trim($v['MARCAV'].' '.$v['SUBMARCAV']), ENT_QUOTES, 'UTF-8').'</td>';
 
-        echo '<td>'.htmlspecialchars($v['PLACASV'], ENT_QUOTES, 'UTF-8').'</td>';
+     echo '<td style="font-weight:bold;">'.htmlspecialchars(trim($v['MARCAV'].' '.$v['SUBMARCAV']), ENT_QUOTES, 'UTF-8').'</td>';
+
+
+     echo '<td style="text-align:center;background:#fff3e0;color:#b04a00;font-weight:bold;">'.htmlspecialchars($v['PLACASV'], ENT_QUOTES, 'UTF-8').'</td>';
+
 
 
 
@@ -327,7 +382,8 @@ function exportar_calendario_excel($vehiculos_filtrados, $asignaciones, $vencimi
 
             $estado = estado_dia($id_v, $fecha, $asignaciones, $vencimientos, $colores_vehiculos);
 
-            echo '<td>'.htmlspecialchars(texto_estado_excel($estado), ENT_QUOTES, 'UTF-8').'</td>';
+          echo '<td style="'.estilo_excel_estado($estado).'">'.nl2br(htmlspecialchars(texto_estado_excel($estado), ENT_QUOTES, 'UTF-8')).'</td>';
+
 
         }
 
